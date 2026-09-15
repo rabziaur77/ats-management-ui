@@ -26,12 +26,7 @@ function getApiUrl(
   localUrl: string,
 ): string {
   if (configuredUrl?.trim()) return configuredUrl.replace(/\/$/, "");
-  if (import.meta.env.PROD) {
-    throw new Error(
-      "Production API URL is missing. Configure the VITE_* API variables.",
-    );
-  }
-  return localUrl;
+  return import.meta.env.PROD ? "" : localUrl;
 }
 
 // ============================================================
