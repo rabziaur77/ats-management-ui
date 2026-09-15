@@ -7,6 +7,7 @@ import axios from "axios";
 const PDF_TO_HTML_API = "http://127.0.0.1:8001";
 const HTML_MERGE_API = "http://127.0.0.1:8002";
 const HTML_TO_PDF_API = "http://127.0.0.1:8003";
+const FORMAT_API = "http://127.0.0.1:8004";
 
 // ============================================================
 // Axios Instances
@@ -22,6 +23,10 @@ const htmlMergeClient = axios.create({
 
 const htmlToPdfClient = axios.create({
   baseURL: HTML_TO_PDF_API,
+});
+
+const formatClient = axios.create({
+  baseURL: FORMAT_API,
 });
 
 // ============================================================
@@ -43,6 +48,61 @@ interface PdfUploadResponse {
   url?: string;
   file?: string;
   [key: string]: unknown;
+}
+
+export interface FormattedFile {
+  blob: Blob;
+  filename: string;
+  html: string;
+}
+
+/**
+ * Applies a requested format to the original resume PDF.
+ */
+export async function formatResume(
+  html: string,
+  format: "ats",
+): Promise<FormattedFile> {
+  if (!html.trim()) {
+    throw new Error("Resume HTML is empty.");
+  }
+
+  const formData = new FormData();
+  const htmlFile = new File([html], "resume.html", {
+    type: "text/html",
+  });
+  formData.append("file", htmlFile, htmlFile.name);
+
+  try {
+    const response = await formatClient.post<Blob>(
+      `/api/v1/format?format=${format}`,
+      formData,
+      {
+        responseType: "blob",
+        headers: {
+          Accept: "text/html, application/pdf, application/octet-stream",
+        },
+      },
+    );
+
+    if (!response.data || response.data.size === 0) {
+      throw new Error("ATS formatting returned an empty file.");
+    }
+
+    const html = await response.data.text();
+    if (!html.trim()) {
+      throw new Error("ATS formatting returned an empty HTML file.");
+    }
+
+    return {
+      blob: response.data,
+      html,
+      filename: extractFilename(response.headers["content-disposition"]) ??
+        "resume_ats.html",
+    };
+  } catch (error) {
+    throw normalizeApiError(error, "Failed to format resume for ATS.");
+  }
 }
 
 // ============================================================
@@ -289,6 +349,16 @@ function extractPdfDownloadReference(data: unknown): string | null {
   return typeof reference === "string" && reference.trim()
     ? reference.trim()
     : null;
+}
+
+function extractFilename(contentDisposition: unknown): string | null {
+  if (typeof contentDisposition !== "string") return null;
+
+  const filenameMatch = contentDisposition.match(
+    /filename\*?=(?:UTF-8''|"?)([^";]+)/i,
+  );
+
+  return filenameMatch?.[1]?.trim() || null;
 }
 
 // ============================================================

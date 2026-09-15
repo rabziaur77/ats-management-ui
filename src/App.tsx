@@ -15,6 +15,7 @@ import StatusBar from "./components/StatusBar";
 import {
   convertHtmlToPdf,
   convertPdfToHtml,
+  formatResume,
   mergeHtml,
 } from "./services/api";
 import type { FormatType } from "./types/resume";
@@ -23,6 +24,10 @@ function App() {
   const [originalPdf, setOriginalPdf] = useState<File | null>(null);
   const [defaultHtml, setDefaultHtml] = useState<string | null>(null);
   const [atsHtml, setAtsHtml] = useState<string | null>(null);
+  const [atsFile, setAtsFile] = useState<{
+    blob: Blob;
+    filename: string;
+  } | null>(null);
 
   const [customReferencePdf, setCustomReferencePdf] = useState<File | null>(
     null,
@@ -39,7 +44,7 @@ function App() {
   const [exporting, setExporting] = useState(false);
 
   const currentHtml = useMemo(() => {
-    if (selectedFormat === "ats") return atsHtml;
+    if (selectedFormat === "ats") return atsHtml ?? defaultHtml;
     if (selectedFormat === "custom") return customHtml;
     return defaultHtml;
   }, [selectedFormat, defaultHtml, atsHtml, customHtml]);
@@ -60,6 +65,7 @@ function App() {
     setOriginalPdf(file);
     setDefaultHtml(null);
     setAtsHtml(null);
+    setAtsFile(null);
     setCustomReferencePdf(null);
     setCustomReferenceHtml(null);
     setCustomHtml(null);
@@ -89,17 +95,13 @@ function App() {
     if (format === "default") return;
 
     if (format === "ats") {
-      if (atsHtml) return;
+      if (atsFile) return;
 
       setProcessing("Generating ATS format...");
       try {
-        // The supplied API list does not include a dedicated ATS endpoint.
-        // Until one exists, use the existing HTML merge API with a generated
-        // ATS reference if your backend provides one. For now, preserve the
-        // source HTML and clearly expose the integration point.
-        //
-        // Replace this call with the real ATS endpoint when available.
-        setAtsHtml(defaultHtml);
+        const formattedFile = await formatResume(defaultHtml, format);
+        setAtsFile(formattedFile);
+        setAtsHtml(formattedFile.html);
       } catch (err) {
         setError(err instanceof Error ? err.message : "ATS formatting failed.");
       } finally {
@@ -152,6 +154,22 @@ function App() {
     setExporting(true);
 
     try {
+      if (selectedFormat === "ats" && !atsFile) {
+        throw new Error("Generate the ATS format before downloading it.");
+      }
+
+      if (selectedFormat === "ats" && atsFile) {
+        const url = URL.createObjectURL(atsFile.blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = atsFile.filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+        return;
+      }
+
       const { blob, filename } = await convertHtmlToPdf(currentHtml);
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
@@ -172,6 +190,7 @@ function App() {
     setOriginalPdf(null);
     setDefaultHtml(null);
     setAtsHtml(null);
+    setAtsFile(null);
     setCustomReferencePdf(null);
     setCustomReferenceHtml(null);
     setCustomHtml(null);
@@ -346,7 +365,12 @@ function App() {
           <button
             type="button"
             className="primary-button"
-            disabled={!currentHtml || exporting || Boolean(processing)}
+            disabled={
+              !currentHtml ||
+              (selectedFormat === "ats" && !atsFile) ||
+              exporting ||
+              Boolean(processing)
+            }
             onClick={exportPdf}
           >
             {exporting ? (
