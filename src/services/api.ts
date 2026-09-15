@@ -4,10 +4,35 @@ import axios from "axios";
 // API BASE URLs
 // ============================================================
 
-const PDF_TO_HTML_API = "http://127.0.0.1:8001";
-const HTML_MERGE_API = "http://127.0.0.1:8002";
-const HTML_TO_PDF_API = "http://127.0.0.1:8003";
-const FORMAT_API = "http://127.0.0.1:8004";
+const PDF_TO_HTML_API = getApiUrl(
+  import.meta.env.VITE_PDF_TO_HTML_API,
+  "http://127.0.0.1:8001",
+);
+const HTML_MERGE_API = getApiUrl(
+  import.meta.env.VITE_HTML_MERGE_API,
+  "http://127.0.0.1:8002",
+);
+const HTML_TO_PDF_API = getApiUrl(
+  import.meta.env.VITE_HTML_TO_PDF_API,
+  "http://127.0.0.1:8003",
+);
+const FORMAT_API = getApiUrl(
+  import.meta.env.VITE_FORMAT_API,
+  "http://127.0.0.1:8004",
+);
+
+function getApiUrl(
+  configuredUrl: string | undefined,
+  localUrl: string,
+): string {
+  if (configuredUrl?.trim()) return configuredUrl.replace(/\/$/, "");
+  if (import.meta.env.PROD) {
+    throw new Error(
+      "Production API URL is missing. Configure the VITE_* API variables.",
+    );
+  }
+  return localUrl;
+}
 
 // ============================================================
 // Axios Instances
@@ -547,4 +572,5 @@ export const API_URLS = {
   pdfToHtml: PDF_TO_HTML_API,
   htmlMerge: HTML_MERGE_API,
   htmlToPdf: HTML_TO_PDF_API,
+  format: FORMAT_API,
 };
