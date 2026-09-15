@@ -51,6 +51,10 @@ VITE_HTML_TO_PDF_API
 VITE_FORMAT_API
 ```
 
+The frontend can be deployed before the backend. Until these values are set,
+API actions will not work on the deployed site. Add the variables after the
+backend services are publicly deployed, then push again to rebuild the site.
+
 Set GitHub Pages **Source** to **GitHub Actions**. The backend services must
 allow `https://rabziaur77.github.io` and the `/ats-management-ui` site path in
 their CORS configuration.

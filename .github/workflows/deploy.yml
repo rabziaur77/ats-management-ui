@@ -40,22 +40,6 @@ jobs:
           VITE_HTML_TO_PDF_API: ${{ vars.VITE_HTML_TO_PDF_API || secrets.VITE_HTML_TO_PDF_API }}
           VITE_FORMAT_API: ${{ vars.VITE_FORMAT_API || secrets.VITE_FORMAT_API }}
 
-      - name: Verify production API configuration
-        run: |
-          missing=0
-          for variable in VITE_PDF_TO_HTML_API VITE_HTML_MERGE_API VITE_HTML_TO_PDF_API VITE_FORMAT_API; do
-            if [ -z "${!variable}" ]; then
-              echo "Missing $variable repository variable or secret"
-              missing=1
-            fi
-          done
-          exit $missing
-        env:
-          VITE_PDF_TO_HTML_API: ${{ vars.VITE_PDF_TO_HTML_API || secrets.VITE_PDF_TO_HTML_API }}
-          VITE_HTML_MERGE_API: ${{ vars.VITE_HTML_MERGE_API || secrets.VITE_HTML_MERGE_API }}
-          VITE_HTML_TO_PDF_API: ${{ vars.VITE_HTML_TO_PDF_API || secrets.VITE_HTML_TO_PDF_API }}
-          VITE_FORMAT_API: ${{ vars.VITE_FORMAT_API || secrets.VITE_FORMAT_API }}
-
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
