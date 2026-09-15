@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/dropzone.tsx","./src/components/formatselector.tsx","./src/components/resumepreview.tsx","./src/components/statusbar.tsx","./src/services/api.ts","./src/types/resume.ts"],"version":"5.9.3"}
