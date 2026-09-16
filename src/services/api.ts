@@ -25,8 +25,19 @@ function getApiUrl(
   configuredUrl: string | undefined,
   localUrl: string,
 ): string {
-  if (configuredUrl?.trim()) return configuredUrl.replace(/\/$/, "");
-  return import.meta.env.PROD ? "" : localUrl;
+  const value = configuredUrl?.trim();
+
+  if (value) {
+    return value.replace(/\/+$/, "");
+  }
+
+  if (import.meta.env.PROD) {
+    throw new Error(
+      "Missing production API URL. Check your VITE_* environment variables.",
+    );
+  }
+
+  return localUrl;
 }
 
 // ============================================================
