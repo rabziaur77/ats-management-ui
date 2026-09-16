@@ -35,10 +35,10 @@ jobs:
         run: npm run build
         env:
           VITE_BASE_PATH: /ats-management-ui/
-          VITE_PDF_TO_HTML_API: ${{ vars.VITE_PDF_TO_HTML_API || secrets.VITE_PDF_TO_HTML_API }}
-          VITE_HTML_MERGE_API: ${{ vars.VITE_HTML_MERGE_API || secrets.VITE_HTML_MERGE_API }}
-          VITE_HTML_TO_PDF_API: ${{ vars.VITE_HTML_TO_PDF_API || secrets.VITE_HTML_TO_PDF_API }}
-          VITE_FORMAT_API: ${{ vars.VITE_FORMAT_API || secrets.VITE_FORMAT_API }}
+          VITE_PDF_TO_HTML_API: https://89-116-21-168.sslip.io/pdftohtml
+          VITE_HTML_MERGE_API: https://89-116-21-168.sslip.io/mergecv
+          VITE_HTML_TO_PDF_API: https://89-116-21-168.sslip.io/htmltoconvert
+          VITE_FORMAT_API: https://89-116-21-168.sslip.io/cvformatter
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
